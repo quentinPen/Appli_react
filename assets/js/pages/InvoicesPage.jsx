@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
 import Paginator from "../components/Paginator";
 import InvoicesApi from '../services/InvoicesApi';
-import moment from 'moment'
 
 const InvoicesPage = props => {
     const [invoices, setInvoices] = useState([]);
