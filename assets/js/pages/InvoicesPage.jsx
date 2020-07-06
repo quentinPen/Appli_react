@@ -2,6 +2,7 @@ import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import Paginator from "../components/Paginator";
 import InvoicesApi from '../services/InvoicesApi';
+import { Link } from 'react-router-dom';
 
 const InvoicesPage = props => {
     const [invoices, setInvoices] = useState([]);
@@ -66,7 +67,10 @@ const InvoicesPage = props => {
         return moment(str).format('DD/MM/YYYY')
     }
     return (<>
-        <h1>Liste des factures</h1>
+        <div className="d-flex justify-content-between align-items-center">
+            <h1>Liste des factures</h1>
+            <Link to="/invoices/new" className="btn btn-primary">Créer une facture</Link>
+        </div>
         <div className="form-group">
             <input type="text" onChange={handleSearch} value={search} className="form-control" placeholder="rechercher" />
         </div>
@@ -89,15 +93,14 @@ const InvoicesPage = props => {
                             {invoice.customer.firstName} {invoice.customer.lastName}</td>
                         <td>{formatDate(invoice.sentAt)}</td>
                         <td className="text-center">
+                            {invoice.amount}
+                        </td>
+                        <td className="text-center">
                             <span className={"badge badge-" + STATUS_CLASSES[invoice.status]}>{STATUS_LABEL[invoice.status]}
                             </span>
                         </td>
-                        <td className="text-center">
-
-                            {invoice.amount}
-                        </td>
                         <td>
-                            <button className="btn btn-sm btn-primary mr-1">Editer</button>
+                            <Link to={"/invoices/" + invoice.id} className="btn btn-sm btn-primary mr-1">Editer</Link>
                             <button className="btn btn-sm btn-danger" onClick={() => handleDelete(invoice.id)}>Supprimer</button>
                         </td>
 
