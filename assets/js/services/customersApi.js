@@ -1,25 +1,57 @@
 import Axios from 'axios';
+import Cache from '../services/Cache';
+import { CUSTOMERS_API_URL } from '../services/Config';
 
-function findAll() {
-    return Axios.get('https://127.0.0.1:8000/api/customers')
-        .then(response => response.data['hydra:member']);
+async function findAll() {
+    const cachedCustomers = await Cache.get('customers');
+    if (cachedCustomers) return cachedCustomers;
+
+    return Axios.get(CUSTOMERS_API_URL)
+        .then(response => {
+            const customers = response.data['hydra:member'];
+            Cache.set("customers", customers);
+            return customers;
+        })
 }
 
 function deleteCustomer(id) {
-    return Axios.delete('https://127.0.0.1:8000/api/customers/' + id);
+    return Axios.delete(CUSTOMERS_API_URL + '/' + id)
+        .then(async response => {
+            const cachedCustomers = await Cache.get('customers');
+            if (cachedCustomers) {
+                Cache.set("customers", cachedCustomers.filter(c => c.id !== + id));
+            }
+            return response;
+        });
 }
 
 function find(id) {
-    return Axios.get("https://127.0.0.1:8000/api/customers/" + id)
-    .then(response => response.data);
+    return Axios.get(CUSTOMERS_API_URL + '/' + id)
+        .then(response => response.data);
 }
 
 function update(id, customer) {
-    return Axios.put('https://127.0.0.1:8000/api/customers/' + id, customer);
+    return Axios.put(CUSTOMERS_API_URL + '/' + id, customer)
+        .then(async response => {
+            const cachedCustomers = await Cache.get('customers');
+            if (cachedCustomers) {
+                const index = cachedCustomers.findIndex(c => c.id === + id);
+                cachedCustomers[index] = response.data;
+            }
+            return response;
+        });
 }
 
-function create(customer){
-    return Axios.post('https://127.0.0.1:8000/api/customers', customer);
+function create(customer) {
+    return Axios.post(CUSTOMERS_API_URL, customer)
+        .then(async response => {
+            const cachedCustomers = await Cache.get('customers');
+
+            if (cachedCustomers) {
+                Cache.set("customers", [...cachedCustomers, response.data])
+            }
+            return response;
+        });
 }
 
 export default {

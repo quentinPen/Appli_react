@@ -1,9 +1,10 @@
 import Axios from 'axios';
 import jwtDecode from "jwt-decode";
+import { LOGIN_API_URL } from './Config';
 
 function authenticate(credentials) {
     // Récupération du token si success
-    return Axios.post('https://127.0.0.1:8000/api/login_check', credentials)
+    return Axios.post(LOGIN_API_URL, credentials)
         .then(response => response.data.token)
         .then(token => {
             // Stockage du token en local Storage
