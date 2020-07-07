@@ -3,11 +3,14 @@ import React, { useEffect, useState } from 'react';
 import Paginator from "../components/Paginator";
 import InvoicesApi from '../services/InvoicesApi';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import TableLoader from '../components/loaders/TableLoader';
 
 const InvoicesPage = props => {
     const [invoices, setInvoices] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
     const STATUS_CLASSES = {
         PAID: "success",
         SENT: "primary",
@@ -25,8 +28,9 @@ const InvoicesPage = props => {
         try {
             const data = await InvoicesApi.findAll().then(response => response.data["hydra:member"]);
             setInvoices(data);
+            setLoading(false);
         } catch (error) {
-            console.log(error.response)
+            toast.error("Une erreur est survenue lors du chargement des factures");
         }
     }
 
@@ -56,10 +60,11 @@ const InvoicesPage = props => {
         const orignalInvoices = [...invoices];
         setInvoices(invoices.filter(invoice => invoice.id !== id));
         try {
-            await InvoicesApi.delete(id)
+            await InvoicesApi.delete(id);
+            toast.success("la facture a bien été supprimée");
         } catch (error) {
+            toast.error("Une erreur est survenue dans la suppression");
             setInvoices(orignalInvoices);
-            console.log(error.response);
         }
     };
 
@@ -74,42 +79,42 @@ const InvoicesPage = props => {
         <div className="form-group">
             <input type="text" onChange={handleSearch} value={search} className="form-control" placeholder="rechercher" />
         </div>
-        <table className="table table-hover">
-            <thead>
-                <tr>
-                    <th>Numéro</th>
-                    <th>Client</th>
-                    <th>Date d'envoi</th>
-                    <th className="text-center">Montant</th>
-                    <th className="text-center">Statut</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {paginatedInvoices.map(invoice =>
-                    <tr key={invoice.id}>
-                        <td>{invoice.chrono}</td>
-                        <td>
-                            {invoice.customer.firstName} {invoice.customer.lastName}</td>
-                        <td>{formatDate(invoice.sentAt)}</td>
-                        <td className="text-center">
-                            {invoice.amount}
-                        </td>
-                        <td className="text-center">
-                            <span className={"badge badge-" + STATUS_CLASSES[invoice.status]}>{STATUS_LABEL[invoice.status]}
-                            </span>
-                        </td>
-                        <td>
-                            <Link to={"/invoices/" + invoice.id} className="btn btn-sm btn-primary mr-1">Editer</Link>
-                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(invoice.id)}>Supprimer</button>
-                        </td>
-
+        {!loading &&
+            <table className="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Client</th>
+                        <th>Date d'envoi</th>
+                        <th className="text-center">Montant</th>
+                        <th className="text-center">Statut</th>
+                        <th></th>
                     </tr>
-                )}
+                </thead>
+                <tbody>
+                    {paginatedInvoices.map(invoice =>
+                        <tr key={invoice.id}>
+                            <td>{invoice.chrono}</td>
+                            <td><Link to={"/customers/" + invoice.customer.id}>{invoice.customer.firstName} {invoice.customer.lastName}</Link></td>
+                            <td>{formatDate(invoice.sentAt)}</td>
+                            <td className="text-center">
+                                {invoice.amount}
+                            </td>
+                            <td className="text-center">
+                                <span className={"badge badge-" + STATUS_CLASSES[invoice.status]}>{STATUS_LABEL[invoice.status]}
+                                </span>
+                            </td>
+                            <td>
+                                <Link to={"/invoices/" + invoice.id} className="btn btn-sm btn-primary mr-1">Editer</Link>
+                                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(invoice.id)}>Supprimer</button>
+                            </td>
 
-            </tbody>
-        </table>
-
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        }
+        {loading && <TableLoader/> }
         <Paginator handleChangePage={handleChangePage} length={filteredInvoices.length} currentPage={currentPage} itemsPerPage={itemsPerPage} />
 
     </>);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Field from '../components/forms/Field';
 import { Link } from 'react-router-dom';
-import Axios from 'axios'
 import customersApi from '../services/customersApi';
+import { toast } from 'react-toastify';
+import FormContentLoader from '../components/loaders/FormContentLoader';
 
 const CustomerPage = ({ history, match }) => {
 
@@ -22,20 +23,21 @@ const CustomerPage = ({ history, match }) => {
     });
 
     const [editing, setEditing] = useState(false);
-
+    const [loading, setLoading] = useState(false);
     // Récuprération du customer en fonction de l'id
     const fetchCustomer = async id => {
         try {
             const { firstName, lastName, email, company } = await customersApi.find(id);
             setCustomer({ firstName, lastName, email, company });
+            setLoading(false);
         } catch (error) {
-            console.log(error.response)
-            // TODO Notif error
+            toast.error("Le client n'a pas pu être chargé")
         }
     }
     // Chargement du customer si besoin au chargement du composant ou changement de l'id
     useEffect(() => {
         if (id !== "new") {
+            setLoading(true);
             setEditing(true);
             fetchCustomer(id);
         };
@@ -53,15 +55,15 @@ const CustomerPage = ({ history, match }) => {
     const handleSubmit = async event => {
         event.preventDefault();
         try {
+            setErrors({});
             if (editing) {
                 await customersApi.update(id, customer);
-                // TODO flash notif de success
+                toast.success("Client modifié");
             } else {
                 await customersApi.create(customer);
-                // TODO flash notif de success
+                toast.success("Client créé");
                 history.replace("/customers");
             }
-            setErrors({});
         } catch ({ response }) {
             if (response.data.violations) {
                 const apiErrors = {};
@@ -69,7 +71,7 @@ const CustomerPage = ({ history, match }) => {
                     apiErrors[violation.propertyPath] = violation.message;
                 });
                 setErrors(apiErrors);
-                // TODO flash notif des erreurs
+                toast.error("Une erreur est survenue");
             }
         }
         console.log(customer);
@@ -77,8 +79,8 @@ const CustomerPage = ({ history, match }) => {
 
     return (<>
         {!editing && <h1>Création d'un client</h1> || <h1>Modification d'un client</h1>}
-
-        <form onSubmit={handleSubmit}>
+        {loading && <FormContentLoader />}
+        {!loading && <form onSubmit={handleSubmit}>
             <Field name="lastName" label="Nom" onChange={handleChange} placeholder="Nom de famille du client" value={customer.lastName} error={errors.lastName}></Field>
             <Field name="firstName" label="Prénom" onChange={handleChange} placeholder="Prénom du client" value={customer.firstName} error={errors.firstName}></Field>
             <Field name="email" label="Email" onChange={handleChange} placeholder="Email du client" type="email" value={customer.email} error={errors.email}></Field>
@@ -87,8 +89,8 @@ const CustomerPage = ({ history, match }) => {
                 <button className="btn btn-success" type="submit">Enregistrer</button>
                 <Link to="/customers" className="btn btn-link">Retour à la liste</Link>
             </div>
-
         </form>
+        }
     </>);
 }
 

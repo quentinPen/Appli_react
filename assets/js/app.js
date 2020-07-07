@@ -8,6 +8,7 @@ import React, { Fragment, useState } from 'react';
 import ReactDOM from 'react-dom';
 // any CSS you import will output into a single css file (app.css in this case)
 import '../css/app.css';
+import 'react-toastify/dist/ReactToastify.css';
 // Need jQuery? Install it with "yarn add jquery", then uncomment to import it.
 // import $ from 'jquery';
 
@@ -24,6 +25,7 @@ import PrivateRoute from './components/PrivateRoute';
 import CustomerPage from './pages/CustomerPage';
 import InvoicePage from './pages/InvoicePage';
 import RegisterPage from './pages/RegisterPage';
+import { ToastContainer, toast } from 'react-toastify';
 
 AuthApi.setUp();
 
@@ -50,6 +52,7 @@ const App = () => {
                         <Route path="/" component={Homepage} />
                     </Switch>
                 </main>
+                <ToastContainer position={toast.POSITION.BOTTOM_RIGHT} />
             </HashRouter>
         </AuthContext.Provider>
     )
